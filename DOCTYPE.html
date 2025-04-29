@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONTROLE FINANCEIRO PLINIO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .chart-container {
+            perspective: 1000px;
+            transition: all 0.3s ease;
+        }
+        .chart-container:hover {
+            transform: translateY(-5px);
+        }
+        .financial-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .financial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        #pieChart3D {
+            width: 100%;
+            height: 400px;
+        }
+        .progress-bar {
+            height: 10px;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-indigo-800">CONTROLE FINANCEIRO <span class="text-blue-600">PLINIO</span></h1>
+                <p class="text-gray-600">Sua ferramenta completa para gestão financeira pessoal e profissional</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <input type="text" placeholder="Buscar..." class="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-download mr-2"></i> Exportar
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Summary Cards -->
+            <div class="financial-card bg-white rounded-xl p-6 col-span-1">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Saldo Atual</h2>
+                    <i class="fas fa-wallet text-2xl text-blue-500"></i>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">R$ <span id="currentBalance">12,458.90</span></div>
+                <div class="flex justify-between text-sm text-gray-500">
+                    <span>Receitas: R$ <span id="totalIncome">15,200.00</span></span>
+                    <span>Despesas: R$ <span id="totalExpenses">2,741.10</span></span>
+                </div>
+                <div class="mt-4">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm font-medium text-gray-700">Meta mensal</span>
+                        <span class="text-sm font-medium text-gray-700">75%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-green-500 progress-bar rounded-full" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="financial-card bg-white rounded-xl p-6 col-span-1">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Investimentos</h2>
+                    <i class="fas fa-chart-line text-2xl text-green-500"></i>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">R$ <span id="investmentsValue">8,750.50</span></div>
+                <div class="flex justify-between text-sm text-gray-500">
+                    <span>Rendimento: <span class="text-green-500">+2.3%</span></span>
+                    <span>Total: +R$ <span id="investmentGain">196.75</span></span>
+                </div>
+                <div class="mt-4">
+                    <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm w-full">
+                        <i class="fas fa-plus-circle mr-2"></i> Adicionar Investimento
+                    </button>
+                </div>
+            </div>
+
+            <div class="financial-card bg-white rounded-xl p-6 col-span-1">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Dívidas</h2>
+                    <i class="fas fa-credit-card text-2xl text-red-500"></i>
+                </div>
+                <div class="text-3xl font-bold text-gray-800 mb-2">R$ <span id="debtsValue">3,210.00</span></div>
+                <div class="flex justify-between text-sm text-gray-500">
+                    <span>Cartões: R$ <span id="creditCardDebt">1,850.00</span></span>
+                    <span>Empréstimos: R$ <span id="loansDebt">1,360.00</span></span>
+                </div>
+                <div class="mt-4">
+                    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm w-full">
+                        <i class="fas fa-calendar-minus mr-2"></i> Planejar Pagamento
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column -->
+            <div class="space-y-6 col-span-2">
+                <!-- Transaction Form -->
+                <div class="financial-card bg-white rounded-xl p-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Adicionar Transação</h2>
+                    <form id="transactionForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                                <select id="transactionType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="income">Receita</option>
+                                    <option value="expense">Despesa</option>
+                                    <option value="investment">Investimento</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                                <select id="transactionCategory" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="salary">Salário</option>
+                                    <option value="freelance">Freelance</option>
+                                    <option value="business">Negócios</option>
+                                    <option value="food">Alimentação</option>
+                                    <option value="transport">Transporte</option>
+                                    <option value="housing">Moradia</option>
+                                    <option value="entertainment">Lazer</option>
+                                    <option value="education">Educação</option>
+                                    <option value="health">Saúde</option>
+                                    <option value="other">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                            <input type="text" id="transactionDescription" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Ex: Salário mensal">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                                <input type="number" id="transactionAmount" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="0,00">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                                <input type="date" id="transactionDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                                <i class="fas fa-plus mr-2"></i> Adicionar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="financial-card bg-white rounded-xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">Transações Recentes</h2>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg">Hoje</button>
+                            <button class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg">Semana</button>
+                            <button class="px-3 py-1 text-sm bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg">Mês</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTable" class="bg-white divide-y divide-gray-200">
+                                <!-- Transactions will be added here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+                <!-- Expense Distribution 3D Chart -->
+                <div class="financial-card bg-white rounded-xl p-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Distribuição de Gastos (3D)</h2>
+                    <div class="chart-container">
+                        <canvas id="pieChart3D"></canvas>
+                    </div>
+                </div>
+
+                <!-- Financial Goals -->
+                <div class="financial-card bg-white rounded-xl p-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Metas Financeiras</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">Reserva de emergência</span>
+                                <span class="text-sm font-medium text-gray-700">65%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-blue-500 progress-bar rounded-full" style="width: 65%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">Viagem internacional</span>
+                                <span class="text-sm font-medium text-gray-700">30%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-purple-500 progress-bar rounded-full" style="width: 30%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">Trocar de carro</span>
+                                <span class="text-sm font-medium text-gray-700">45%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-green-500 progress-bar rounded-full" style="width: 45%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm">
+                        <i class="fas fa-plus mr-2"></i> Adicionar Meta
+                    </button>
+                </div>
+
+                <!-- Investment Tips -->
+                <div class="financial-card bg-white rounded-xl p-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Dicas de Investimento</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-start">
+                            <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-piggy-bank text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-800">Reserva de Emergência</h3>
+                                <p class="text-sm text-gray-600">Mantenha 6 meses de despesas em investimentos de alta liquidez como CDB ou Tesouro Selic.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-green-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-chart-pie text-green-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-800">Diversificação</h3>
+                                <p class="text-sm text-gray-600">Distribua seus investimentos entre renda fixa, variável e internacional para reduzir riscos.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-purple-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-coins text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-800">Longo Prazo</h3>
+                                <p class="text-sm text-gray-600">Considere ETFs e fundos de índice para exposição ao mercado com taxas baixas.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="mt-4 w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg text-sm">
+                        <i class="fas fa-lightbulb mr-2"></i> Mais Dicas
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <!-- Income vs Expenses Chart -->
+            <div class="financial-card bg-white rounded-xl p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Receitas vs Despesas (Últimos 6 meses)</h2>
+                <div class="chart-container">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Financial Projections -->
+            <div class="financial-card bg-white rounded-xl p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Projeções Financeiras</h2>
+                <div class="chart-container">
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for the dashboard
+        const sampleTransactions = [
+            { id: 1, description: "Salário Empresa A", category: "salary", date: "2023-06-30", amount: 4500.00, type: "income" },
+            { id: 2, description: "Aluguel", category: "housing", date: "2023-06-30", amount: 1200.00, type: "expense" },
+            { id: 3, description: "Supermercado", category: "food", date: "2023-06-28", amount: 350.50, type: "expense" },
+            { id: 4, description: "Freelance Design", category: "freelance", date: "2023-06-25", amount: 850.00, type: "income" },
+            { id: 5, description: "Academia", category: "health", date: "2023-06-25", amount: 120.00, type: "expense" },
+            { id: 6, description: "Investimento CDB", category: "investment", date: "2023-06-20", amount: 500.00, type: "investment" },
+            { id: 7, description: "Restaurante", category: "food", date: "2023-06-18", amount: 85.00, type: "expense" },
+            { id: 8, description: "Gasolina", category: "transport", date: "2023-06-15", amount: 150.00, type: "expense" },
+        ];
+
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Pie Chart (3D effect)
+            const pieCtx = document.getElementById('pieChart3D').getContext('2d');
+            const pieChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Moradia', 'Alimentação', 'Transporte', 'Lazer', 'Saúde', 'Outros'],
+                    datasets: [{
+                        data: [1200, 435.5, 150, 85, 120, 350.5],
+                        backgroundColor: [
+                            '#3B82F6',
+                            '#10B981',
+                            '#F59E0B',
+                            '#8B5CF6',
+                            '#EC4899',
+                            '#64748B'
+                        ],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: R$ ${value.toFixed(2)} (${percentage}%)`;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            formatter: (value, ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = (value * 100 / total).toFixed(1) + "%";
+                                return percentage;
+                            },
+                            color: '#fff',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+
+            // Bar Chart
+            const barCtx = document.getElementById('barChart').getContext('2d');
+            const barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                    datasets: [
+                        {
+                            label: 'Receitas',
+                            data: [4200, 4500, 4800, 4600, 4700, 5350],
+                            backgroundColor: '#10B981',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Despesas',
+                            data: [2800, 2950, 3100, 3200, 3300, 2741.1],
+                            backgroundColor: '#EF4444',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw || 0;
+                                    return `${label}: R$ ${value.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Line Chart
+            const lineCtx = document.getElementById('lineChart').getContext('2d');
+            const lineChart = new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                    datasets: [
+                        {
+                            label: 'Saldo Projetado',
+                            data: [5000, 6500, 8000, 9500, 11000, 12458, 14000, 16000, 18000, 20000, 22500, 25000],
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#3B82F6',
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Investimentos',
+                            data: [3000, 3500, 4200, 5000, 6000, 6750, 8000, 9500, 11000, 13000, 15000, 17500],
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#10B981',
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw || 0;
+                                    return `${label}: R$ ${value.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Populate transactions table
+            const transactionsTable = document.getElementById('transactionsTable');
+            
+            function populateTransactionsTable() {
+                transactionsTable.innerHTML = '';
+                sampleTransactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    
+                    // Determine icon and color based on type
+                    let icon, color;
+                    if (transaction.type === 'income') {
+                        icon = 'fa-arrow-down';
+                        color = 'text-green-500';
+                    } else if (transaction.type === 'expense') {
+                        icon = 'fa-arrow-up';
+                        color = 'text-red-500';
+                    } else {
+                        icon = 'fa-chart-line';
+                        color = 'text-blue-500';
+                    }
+                    
+                    // Format amount with R$ and color
+                    const amountFormatted = transaction.type === 'expense' ? 
+                        `-R$ ${transaction.amount.toFixed(2)}` : 
+                        `R$ ${transaction.amount.toFixed(2)}`;
+                    
+                    // Format date to DD/MM/YYYY
+                    const dateParts = transaction.date.split('-');
+                    const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                    
+                    // Get category name in Portuguese
+                    const categoryNames = {
+                        salary: 'Salário',
+                        freelance: 'Freelance',
+                        business: 'Negócios',
+                        food: 'Alimentação',
+                        transport: 'Transporte',
+                        housing: 'Moradia',
+                        entertainment: 'Lazer',
+                        education: 'Educação',
+                        health: 'Saúde',
+                        other: 'Outros',
+                        investment: 'Investimento'
+                    };
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                                    <i class="fas ${icon} ${color}"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">${transaction.description}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">${categoryNames[transaction.category]}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">${formattedDate}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium ${color}">${amountFormatted}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-2"><i class="fas fa-edit"></i></button>
+                            <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    transactionsTable.appendChild(row);
+                });
+            }
+            
+            populateTransactionsTable();
+            
+            // Form submission for new transaction
+            const transactionForm = document.getElementById('transactionForm');
+            transactionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const type = document.getElementById('transactionType').value;
+                const category = document.getElementById('transactionCategory').value;
+                const description = document.getElementById('transactionDescription').value;
+                const amount = parseFloat(document.getElementById('transactionAmount').value);
+                const date = document.getElementById('transactionDate').value;
+                
+                // Create new transaction
+                const newTransaction = {
+                    id: sampleTransactions.length + 1,
+                    description: description,
+                    category: category,
+                    date: date,
+                    amount: amount,
+                    type: type
+                };
+                
+                sampleTransactions.unshift(newTransaction);
+                populateTransactionsTable();
+                
+                // Update summary cards
+                updateSummaryCards();
+                
+                // Reset form
+                transactionForm.reset();
+                
+                // Show success message
+                alert('Transação adicionada com sucesso!');
+            });
+            
+            // Function to update summary cards
+            function updateSummaryCards() {
+                // Calculate totals
+                const totalIncome = sampleTransactions
+                    .filter(t => t.type === 'income')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                const totalExpenses = sampleTransactions
+                    .filter(t => t.type === 'expense')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                const investments = sampleTransactions
+                    .filter(t => t.type === 'investment')
+                    .reduce((sum, t) => sum + t.amount, 8750.50); // Starting value
+                
+                const investmentGain = investments * 0.023; // 2.3% gain
+                
+                // Update DOM
+                document.getElementById('totalIncome').textContent = totalIncome.toFixed(2);
+                document.getElementById('totalExpenses').textContent = totalExpenses.toFixed(2);
+                document.getElementById('currentBalance').textContent = (totalIncome - totalExpenses).toFixed(2);
+                document.getElementById('investmentsValue').textContent = (investments + investmentGain).toFixed(2);
+                document.getElementById('investmentGain').textContent = investmentGain.toFixed(2);
+                
+                // Update pie chart data (simplified example)
+                pieChart.data.datasets[0].data = [
+                    1200, // housing
+                    sampleTransactions.filter(t => t.category === 'food').reduce((sum, t) => sum + t.amount, 0),
+                    sampleTransactions.filter(t => t.category === 'transport').reduce((sum, t) => sum + t.amount, 0),
+                    85, // entertainment (hardcoded for demo)
+                    sampleTransactions.filter(t => t.category === 'health').reduce((sum, t) => sum + t.amount, 0),
+                    sampleTransactions.filter(t => t.category === 'other').reduce((sum, t) => sum + t.amount, 0)
+                ];
+                pieChart.update();
+            }
+            
+            // Set default date to today
+            document.getElementById('transactionDate').valueAsDate = new Date();
+        });
+
+        // Simple 3D effect for pie chart using Three.js
+        function create3DPieChart() {
+            const container = document.getElementById('pieChart3D');
+            
+            // Remove canvas if it exists
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+            
+            // Create new canvas
+            const canvas = document.createElement('canvas');
+            canvas.id = 'pieChart3DCanvas';
+            container.appendChild(canvas);
+            
+            // Initialize Three.js scene
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            
+            // Create pie slices
+            const colors = [0x3B82F6, 0x10B981, 0xF59E0B, 0x8B5CF6, 0xEC4899, 0x64748B];
+            const data = [1200, 435.5, 150, 85, 120, 350.5];
+            const total = data.reduce((a, b) => a + b, 0);
+            
+            let startAngle = 0;
+            const radius = 5;
+            const height = 1;
+            
+            data.forEach((value, i) => {
+                const percentage = value / total;
+                const endAngle = startAngle + percentage * Math.PI * 2;
+                
+                const shape = new THREE.Shape();
+                shape.moveTo(0, 0);
+                shape.lineTo(radius * Math.cos(startAngle), radius * Math.sin(startAngle));
+                
+                const centerAngle = startAngle + (endAngle - startAngle) / 2;
+                const midRadius = radius * 1.05;
+                shape.lineTo(midRadius * Math.cos(centerAngle), midRadius * Math.sin(centerAngle));
+                
+                shape.lineTo(radius * Math.cos(endAngle), radius * Math.sin(endAngle));
+                shape.lineTo(0, 0);
+                
+                const geometry = new THREE.ExtrudeGeometry(shape, {
+                    steps: 1,
+                    depth: height,
+                    bevelEnabled: false
+                });
+                
+                const material = new THREE.MeshBasicMaterial({ color: colors[i] });
+                const slice = new THREE.Mesh(geometry, material);
+                
+                // Position slices in a circle
+                slice.position.x = Math.cos(startAngle + (endAngle - startAngle) / 2) * 0.5;
+                slice.position.y = Math.sin(startAngle + (endAngle - startAngle) / 2) * 0.5;
+                
+                scene.add(slice);
+                startAngle = endAngle;
+            });
+            
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            // Position camera
+            camera.position.z = 10;
+            camera.position.y = 2;
+            camera.lookAt(0, 0, 0);
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Rotate the scene
+                scene.rotation.y += 0.005;
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+        
+        // Initialize 3D pie chart
+        create3DPieChart();
+    </script>
+</body>
+</html>
